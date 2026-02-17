@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MERN.io | Ultimate Flow</title>
+  <link rel="icon" type="image/png" href="./images/image.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { borderRadius: { '4xl': '2rem', '5xl': '3rem' } } }
+    }
+  </script>
+</head>
+
+<body
+  class="bg-slate-50 dark:bg-gray-950 text-slate-900 dark:text-slate-100 transition-colors duration-500 font-sans selection:bg-blue-500 selection:text-white">
+
+  <div id="resetModal"
+    class="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[200] hidden flex items-center justify-center p-6">
+    <div id="modalContent"
+      class="bg-white dark:bg-gray-800 rounded-5xl p-10 max-w-sm w-full shadow-2xl text-center transform transition-all duration-300 scale-90 opacity-0">
+      <div class="text-7xl mb-6">🧨</div>
+      <h3 class="text-3xl font-black mb-3">Wipe Everything?</h3>
+      <p class="text-slate-500 dark:text-slate-400 text-sm mb-10 font-medium">This action is permanent and will reset
+        your entire productivity database.</p>
+      <div id="resetOptions" class="space-y-4">
+        <button onclick="executeReset()"
+          class="w-full py-5 rounded-3xl bg-red-600 text-white font-black hover:bg-red-700 active:scale-95 transition-all">CONFIRM
+          RESET</button>
+        <button onclick="closeResetModal()"
+          class="w-full py-5 rounded-3xl bg-slate-100 dark:bg-gray-700 font-black hover:bg-slate-200 dark:hover:bg-gray-600 transition-all">CANCEL</button>
+      </div>
+      <div id="resetLoading" class="hidden py-10">
+        <div class="w-16 h-16 border-8 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-6">
+        </div>
+        <p class="font-black text-blue-600 uppercase tracking-tighter">Purging Systems...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex min-h-screen">
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 z-40 hidden lg:hidden backdrop-blur-sm"></div>
+
+    <aside id="sidebar"
+      class="fixed inset-y-0 left-0 w-80 bg-white dark:bg-gray-900 border-r dark:border-gray-800 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-500 z-50 flex flex-col shadow-2xl lg:shadow-none">
+      <div class="p-10 flex justify-between items-center">
+        <h2 class="text-4xl font-black text-blue-600 tracking-tighter italic select-none">MERN.io</h2>
+        <button onclick="toggleSidebar(false)"
+          class="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-2xl transition-all">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="px-8 mb-10">
+        <div
+          class="p-6 bg-slate-50 dark:bg-gray-800/50 rounded-4xl border-2 border-transparent hover:border-blue-500/50 transition-all cursor-default group">
+          <div class="flex items-center gap-5">
+            <img id="sideAvatar" src=""
+              class="w-16 h-16 rounded-3xl object-cover ring-4 ring-white dark:ring-gray-700 shadow-xl group-hover:scale-110 transition-transform duration-500">
+            <div class="flex-1 overflow-hidden">
+              <p id="sideName" class="font-black text-lg truncate leading-none mb-1 text-blue-600 dark:text-blue-400">
+                Guest</p>
+              <p id="sideRank" class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Syncing...
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="px-6 space-y-3 flex-1 overflow-y-auto scrollbar-hide">
+        <button onclick="showPage('home')"
+          class="w-full text-left p-5 rounded-3xl hover:bg-blue-600 hover:text-white font-black flex items-center gap-5 transition-all active:scale-95 group">
+          <span class="text-2xl group-hover:rotate-12 transition-transform">🏠</span> Home
+        </button>
+        <button onclick="showPage('tasks')"
+          class="w-full text-left p-5 rounded-3xl hover:bg-blue-600 hover:text-white font-black flex items-center gap-5 transition-all active:scale-95 group">
+          <span class="text-2xl group-hover:rotate-12 transition-transform">🎯</span> Daily Planner
+        </button>
+        <button onclick="showPage('settings')"
+          class="w-full text-left p-5 rounded-3xl hover:bg-blue-600 hover:text-white font-black flex items-center gap-5 transition-all active:scale-95 group">
+          <span class="text-2xl group-hover:rotate-12 transition-transform">👤</span> Profile
+        </button>
+
+        <div class="pt-12 px-4">
+          <p class="text-[11px] uppercase font-black text-slate-400 mb-6 tracking-[0.4em]">Time Machine</p>
+          <div id="dateHistoryList" class="space-y-4"></div>
+        </div>
+      </nav>
+
+      <div class="p-8">
+        <button id="themeToggle"
+          class="w-full p-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-3xl font-black shadow-2xl flex items-center justify-center gap-4 active:scale-90 transition-all">
+          <span id="themeIcon" class="text-xl">🌙</span> <span class="text-[11px] uppercase tracking-widest">Toggle
+            Appearance</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <header
+        class="lg:hidden bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl p-6 flex justify-between items-center border-b dark:border-gray-800 sticky top-0 z-30">
+        <span class="font-black text-blue-600 text-3xl tracking-tighter italic">M.</span>
+        <button onclick="toggleSidebar(true)"
+          class="p-4 bg-blue-600 text-white rounded-2xl shadow-xl shadow-blue-500/30">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </header>
+
+      <div class="p-6 lg:p-20 max-w-6xl mx-auto w-full">
+
+        <section id="home-page" class="page-content space-y-16">
+          <div class="flex flex-col md:flex-row gap-12 items-center text-center md:text-left">
+            <div class="relative group">
+              <img id="mainAvatar" src=""
+                class="w-56 h-56 rounded-5xl object-cover shadow-2xl border-8 border-white dark:border-gray-800 transition-all duration-700 group-hover:rotate-3 group-hover:scale-105">
+              <div
+                class="absolute -bottom-5 -right-5 bg-green-500 text-white text-[11px] font-black px-6 py-3 rounded-full border-8 border-slate-50 dark:border-gray-950 shadow-2xl animate-pulse">
+                LIVE</div>
+            </div>
+            <div>
+              <h1 id="welcomeTitle"
+                class="text-6xl lg:text-9xl font-black tracking-tighter mb-4 leading-none text-slate-900 dark:text-white">
+                Hi, Guest!</h1>
+              <p class="text-blue-600 dark:text-blue-400 font-black text-2xl tracking-tight opacity-80 uppercase">Let's
+                dominate the day.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div
+              class="bg-gradient-to-br from-blue-600 to-indigo-700 p-14 rounded-5xl text-white shadow-3xl shadow-blue-500/20 relative group overflow-hidden">
+              <h2 class="text-3xl font-black mb-12 relative z-10">Productivity Score</h2>
+              <div class="flex items-end justify-between mb-6 relative z-10">
+                <span id="todayPercent" class="text-8xl font-black">0%</span>
+              </div>
+              <div class="w-full bg-white/20 rounded-full h-6 relative z-10 p-1">
+                <div id="todayProgress"
+                  class="bg-white h-full rounded-full transition-all duration-1000 shadow-[0_0_30px_rgba(255,255,255,0.8)]"
+                  style="width: 0%"></div>
+              </div>
+              <div
+                class="absolute -top-10 -right-10 text-[15rem] opacity-10 rotate-12 group-hover:rotate-45 transition-transform duration-1000">
+                ⚡</div>
+            </div>
+            <div
+              class="bg-white dark:bg-gray-900 p-14 rounded-5xl border-4 border-slate-100 dark:border-gray-800 flex flex-col justify-center items-center text-center shadow-sm">
+              <div
+                class="w-40 h-40 rounded-full border-[12px] border-blue-500/10 flex items-center justify-center mb-8">
+                <span id="taskStatCount" class="text-7xl font-black text-blue-600">0</span>
+              </div>
+              <p class="font-black uppercase tracking-[0.5em] text-slate-400 text-xs">Remaining Tasks</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="tasks-page" class="page-content hidden">
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-10 mb-20">
+            <h1 class="text-6xl font-black tracking-tighter">My Agenda</h1>
+            <div class="flex items-center gap-5">
+              <input type="date" id="datePicker"
+                class="p-5 bg-white dark:bg-gray-800 border-4 border-slate-100 dark:border-gray-700 rounded-3xl font-black text-blue-600 outline-none focus:border-blue-500 transition-all cursor-pointer">
+              <button onclick="window.print()"
+                class="p-5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-3xl hover:scale-110 active:scale-90 transition-all shadow-2xl">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                    d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="bg-white dark:bg-gray-900 p-6 rounded-[3rem] flex flex-col sm:flex-row gap-6 mb-16 border-4 border-slate-100 dark:border-gray-800 shadow-2xl shadow-blue-500/5">
+            <input type="text" id="taskInput"
+              class="flex-1 p-6 bg-transparent outline-none font-black text-2xl placeholder:text-slate-300 dark:placeholder:text-gray-600"
+              placeholder="Type a new goal...">
+            <button onclick="addTask()"
+              class="bg-blue-600 text-white px-16 py-6 rounded-4xl font-black text-xl hover:bg-blue-700 active:scale-90 transition-all shadow-xl shadow-blue-500/20">ADD</button>
+          </div>
+
+          <ul id="taskList" class="space-y-6"></ul>
+        </section>
+
+        <section id="settings-page" class="page-content hidden">
+          <div class="max-w-3xl mx-auto space-y-16">
+            <h1 class="text-6xl font-black tracking-tighter">Identity</h1>
+
+            <div
+              class="bg-white dark:bg-gray-900 p-16 rounded-5xl border-4 border-slate-100 dark:border-gray-800 shadow-xl space-y-16">
+              <div class="flex flex-col items-center">
+                <div class="relative group cursor-pointer w-64 h-64">
+                  <img id="editAvatar" src=""
+                    class="w-full h-full rounded-[4rem] object-cover border-[12px] border-white dark:border-gray-800 shadow-3xl transition-all duration-500 group-hover:scale-105">
+                  <label
+                    class="absolute inset-0 bg-blue-600/60 backdrop-blur-md rounded-[4rem] flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all font-black text-white text-sm uppercase tracking-widest p-6 text-center">
+                    <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Update Photo
+                    <input type="file" id="imageUpload" class="hidden" accept="image/*">
+                  </label>
+                </div>
+              </div>
+
+              <div class="space-y-10">
+                <div>
+                  <label
+                    class="text-[11px] font-black uppercase text-slate-400 tracking-[0.5em] ml-8 mb-4 block">Personal
+                    Name</label>
+                  <input type="text" id="nameInput"
+                    class="w-full p-8 bg-slate-50 dark:bg-gray-800 border-4 border-transparent focus:border-blue-600 rounded-4xl outline-none font-black text-2xl transition-all placeholder:opacity-20"
+                    placeholder="Your Name">
+                </div>
+
+                <div class="p-10 bg-slate-50 dark:bg-gray-800 rounded-4xl">
+                  <div class="flex justify-between items-end mb-6">
+                    <p class="font-black text-xs uppercase tracking-widest text-blue-600">Career XP</p>
+                    <p id="xpCounter" class="text-sm font-black text-slate-500 italic">0 XP</p>
+                  </div>
+                  <div class="w-full bg-slate-200 dark:bg-gray-700 h-4 rounded-full overflow-hidden p-1">
+                    <div id="xpProgress"
+                      class="bg-blue-600 h-full rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(37,99,235,0.5)]"
+                      style="width: 0%"></div>
+                  </div>
+                </div>
+
+                <button onclick="saveProfileChanges()"
+                  class="w-full bg-blue-600 text-white p-8 rounded-4xl font-black text-xl shadow-2xl shadow-blue-500/30 hover:bg-blue-700 active:scale-95 transition-all">SAVE
+                  SETTINGS</button>
+              </div>
+            </div>
+
+            <div class="text-center pt-10">
+              <button onclick="openResetModal()"
+                class="text-red-500 font-black text-xs uppercase tracking-[0.3em] hover:text-red-700 hover:underline transition-all">Perform
+                Hard Reset</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast"
+    class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-14 py-6 rounded-full shadow-3xl translate-y-[200%] opacity-0 transition-all duration-500 font-black z-[300] flex items-center gap-5 border-4 border-blue-600/20">
+    <span id="toastIcon" class="text-2xl">✨</span> <span id="toastMsg"
+      class="uppercase tracking-widest text-[11px]">System Updated</span>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
